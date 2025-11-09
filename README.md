@@ -98,6 +98,7 @@ public class EurekaDiscoveryServiceApplication {
 
 #### Eureka Dashboard
 ![img.png](img.png)
+
 #### 4. **Gateway-Service** (Port: 8888)
 Point d'entrée unique pour toutes les requêtes clients utilisant Spring Cloud Gateway.
 
@@ -107,7 +108,61 @@ Point d'entrée unique pour toutes les requêtes clients utilisant Spring Cloud 
 - Filtrage des requêtes (authentification, logging)
 - Rate limiting
 - Circuit breaker
-- 
+- ![img_1.png](img_1.png)
+
+  **Dépendance Eureka Server :**
+```xml
+<dependencies>
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-gateway</artifactId>
+  </dependency>
+
+  <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+  </dependency>
+</dependencies>
+```
+
+**Configuration application.properties :**
+```properties
+spring.application.name=gateway-service
+server.port = 8888
+spring.cloud.config.enabled= false
+spring.cloud.discovery.enabled=true
+eureka.client.service-url.defaultZone=http://localhost:8761/eureka
+eureka.instance.prefer-ip-address=true
+spring.cloud.gateway.discovery.locator.lower-case-service-id=true
+```
+
+**Annotation dans la classe principale :**
+```java
+package com.example.gatewayservice;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.ReactiveDiscoveryClient;
+import org.springframework.cloud.gateway.discovery.DiscoveryClientRouteDefinitionLocator;
+import org.springframework.cloud.gateway.discovery.DiscoveryLocatorProperties;
+import org.springframework.context.annotation.Bean;
+
+@SpringBootApplication
+public class GatewayServiceApplication {
+
+  public static void main(String[] args) {
+    SpringApplication.run(GatewayServiceApplication.class, args);
+  }
+
+  @Bean
+  public DiscoveryClientRouteDefinitionLocator discoveryClientRouteDefinitionLocator(
+          ReactiveDiscoveryClient reactiveDiscoveryClient,
+          DiscoveryLocatorProperties discoveryLocatorProperties) {
+    return new DiscoveryClientRouteDefinitionLocator(reactiveDiscoveryClient, discoveryLocatorProperties);
+  }
+}
+```
+
 #### 6. **Config-Service** (Port: 8888)
 Gestion centralisée des configurations (Spring Cloud Config ou Consul Config).
 
