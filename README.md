@@ -59,6 +59,66 @@ Les banques modernes nécessitent des systèmes distribués, scalables et résil
            └─────────────────┘        └─────────────────┘
 ```
 
+### Micro-services Techniques
+
+#### 5. **Discovery-Service** (Port: 8761)
+Service de découverte et d'enregistrement des micro-services (Eureka Server ou Consul).
+
+**Responsabilités:**
+- Enregistrement automatique des services
+- Health checking
+- Service discovery dynamique
+- Load balancing côté client
+  **Dépendance Eureka Server :**
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+</dependency>
+```
+
+**Configuration application.properties :**
+```properties
+spring.application.name=eureka-discovery-service
+server.port=8761
+eureka.client.register-with-eureka=false
+eureka.client.fetch-registry=false
+```
+
+**Annotation dans la classe principale :**
+```java
+@SpringBootApplication
+@EnableEurekaServer
+public class EurekaDiscoveryServiceApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(EurekaDiscoveryServiceApplication.class, args);
+    }
+}
+```
+
+#### Eureka Dashboard
+![img.png](img.png)
+#### 4. **Gateway-Service** (Port: 8888)
+Point d'entrée unique pour toutes les requêtes clients utilisant Spring Cloud Gateway.
+
+**Responsabilités:**
+- Routage des requêtes vers les micro-services appropriés
+- Load balancing
+- Filtrage des requêtes (authentification, logging)
+- Rate limiting
+- Circuit breaker
+- 
+#### 6. **Config-Service** (Port: 8888)
+Gestion centralisée des configurations (Spring Cloud Config ou Consul Config).
+
+**Responsabilités:**
+- Configuration externalisée
+- Gestion des profils (dev, test, prod)
+- Rafraîchissement dynamique des configurations
+- Versioning des configurations
+
+---
+
 ### Micro-services Fonctionnels
 
 #### 1. **Bénéficiaire-Service** (Port: 8081)
@@ -115,37 +175,6 @@ Assistant intelligent basé sur l'IA générative utilisant la technique RAG (Re
 - `GET /api/chatbot/documents` - Liste des documents disponibles
 - `POST /api/chatbot/documents` - Charger un nouveau document
 
-### Micro-services Techniques
-
-#### 4. **Gateway-Service** (Port: 8888)
-Point d'entrée unique pour toutes les requêtes clients utilisant Spring Cloud Gateway.
-
-**Responsabilités:**
-- Routage des requêtes vers les micro-services appropriés
-- Load balancing
-- Filtrage des requêtes (authentification, logging)
-- Rate limiting
-- Circuit breaker
-
-#### 5. **Discovery-Service** (Port: 8761)
-Service de découverte et d'enregistrement des micro-services (Eureka Server ou Consul).
-
-**Responsabilités:**
-- Enregistrement automatique des services
-- Health checking
-- Service discovery dynamique
-- Load balancing côté client
-
-#### 6. **Config-Service** (Port: 8888)
-Gestion centralisée des configurations (Spring Cloud Config ou Consul Config).
-
-**Responsabilités:**
-- Configuration externalisée
-- Gestion des profils (dev, test, prod)
-- Rafraîchissement dynamique des configurations
-- Versioning des configurations
-
----
 
 ## 🛠️ Technologies Utilisées
 
