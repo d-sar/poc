@@ -1,0 +1,124 @@
+### 15. Créer un virement normal valide
+POST http://localhost:8888/virement-service/virements
+Content-Type: application/json
+
+{
+  "beneficiaireId": 1,
+  "ribSource": "FR7610011000201234567890188",
+  "montant": 1500.50,
+  "description": "Remboursement frais",
+  "type": "NORMAL"
+}
+
+### 16. Créer un virement instantané
+POST http://localhost:8080/api/virements
+Content-Type: application/json
+
+{
+  "beneficiaireId": 3,
+  "ribSource": "FR7610011000201234567890189",
+  "montant": 450.00,
+  "description": "Virement urgent",
+  "type": "INSTANTANE"
+}
+
+### 17. Créer un virement avec bénéficiaire inexistant
+POST http://localhost:8080/api/virements
+Content-Type: application/json
+
+{
+  "beneficiaireId": 999,
+  "ribSource": "FR7610011000201234567890188",
+  "montant": 100.00,
+  "description": "Test bénéficiaire inexistant",
+  "type": "NORMAL"
+}
+
+### 18. Créer un virement avec montant négatif
+POST http://localhost:8080/api/virements
+Content-Type: application/json
+
+{
+  "beneficiaireId": 1,
+  "ribSource": "FR7610011000201234567890188",
+  "montant": -50.00,
+  "description": "Montant négatif",
+  "type": "NORMAL"
+}
+
+### 19. Créer un virement instantané avec montant trop élevé
+POST http://localhost:8080/api/virements
+Content-Type: application/json
+
+{
+  "beneficiaireId": 1,
+  "ribSource": "FR7610011000201234567890188",
+  "montant": 6000.00,
+  "description": "Dépassement limite instantané",
+  "type": "INSTANTANE"
+}
+
+### 20. Créer un virement sans RIB source
+POST http://localhost:8080/api/virements
+Content-Type: application/json
+
+{
+  "beneficiaireId": 1,
+  "montant": 100.00,
+  "description": "Sans RIB source",
+  "type": "NORMAL"
+}
+
+### 21. Récupérer tous les virements
+GET http://localhost:8888/virement-service/virements
+
+### 22. Récupérer un virement par ID
+GET http://localhost:8888/virement-service/virements/1
+
+### 23. Récupérer un virement avec détails complets
+GET http://localhost:8080/api/virements/1/details
+
+### 24. Récupérer un virement inexistant
+GET http://localhost:8080/api/virements/999
+
+### 25. Récupérer les virements par bénéficiaire
+GET http://localhost:8080/api/virements/beneficiaire/1
+
+### 26. Récupérer les virements par RIB source
+GET http://localhost:8080/api/virements/source/FR7610011000201234567890188
+
+### 27. Récupérer les virements par statut
+GET http://localhost:8080/api/virements/statut/VALIDE
+
+### 28. Récupérer les virements par statut INITIE
+GET http://localhost:8080/api/virements/statut/INITIE
+
+### 29. Modifier le statut d'un virement
+PUT http://localhost:8080/api/virements/1/statut?nouveauStatut=EXECUTE
+
+### 30. Modifier le statut d'un virement inexistant
+PUT http://localhost:8080/api/virements/999/statut?nouveauStatut=EXECUTE
+
+### 31. Annuler un virement
+POST http://localhost:8080/api/virements/1/annuler
+
+### 32. Annuler un virement déjà exécuté (doit échouer)
+POST http://localhost:8080/api/virements/1/annuler
+
+### 33. Annuler un virement inexistant
+POST http://localhost:8080/api/virements/999/annuler
+
+### 34. Obtenir le total des virements sur une période
+GET http://localhost:8080/api/virements/stats/total?ribSource=FR7610011000201234567890188&startDate=2024-01-01T00:00:00&endDate=2024-12-31T23:59:59
+
+### 35. Obtenir les statistiques avec dates actuelles
+GET http://localhost:8080/api/virements/stats/total?ribSource=FR7610011000201234567890188&startDate=2024-11-01T00:00:00&endDate=2024-11-09T23:59:59
+
+### 36. Supprimer un virement (annulation)
+DELETE http://localhost:8080/api/virements/2
+
+### 37. Supprimer un virement inexistant
+DELETE http://localhost:8080/api/virements/999
+
+### 37.
+GET http://localhost:8888/virement-service/beneficiaires/1/exists

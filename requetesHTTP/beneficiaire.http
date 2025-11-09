@@ -1,0 +1,88 @@
+### 1. Créer un bénéficiaire physique
+POST http://localhost:8888/beneficiaire-service/beneficiaires
+Content-Type: application/json
+
+{
+  "nom": "Dupont",
+  "prenom": "Jean",
+  "rib": "FR7630001007941234567890185",
+  "type": "PHYSIQUE"
+}
+
+### 2. Créer un bénéficiaire morale
+POST http://localhost:8888/beneficiaire-service/beneficiaires
+Content-Type: application/json
+
+{
+  "nom": "SARL TechSolution",
+  "prenom": "",
+  "rib": "FR7630001007941234567890186",
+  "type": "MORALE"
+}
+
+### 3. Créer un autre bénéficiaire physique
+POST http://localhost:8080/api/beneficiaires
+Content-Type: application/json
+
+{
+  "nom": "Martin",
+  "prenom": "Sophie",
+  "rib": "FR7630001007941234567890187",
+  "type": "PHYSIQUE"
+}
+
+### 4. Test validation - RIB manquant
+POST http://localhost:8080/api/beneficiaires
+Content-Type: application/json
+
+{
+  "nom": "Test",
+  "prenom": "Error",
+  "type": "PHYSIQUE"
+}
+
+### 5. Récupérer tous les bénéficiaires
+GET http://localhost:8888/beneficiaire-service/beneficiaires
+
+### 6. Récupérer un bénéficiaire par ID
+GET http://localhost:8888/beneficiaire-service/beneficiaires/1
+
+### 7. Récupérer un bénéficiaire inexistant
+GET http://localhost:8080/api/beneficiaires/999
+
+### 8. Vérifier l'existence d'un bénéficiaire
+GET http://localhost:8080/api/beneficiaires/1/exists
+
+### 9. Vérifier l'existence d'un bénéficiaire inexistant
+GET http://localhost:8080/api/beneficiaires/999/exists
+
+### 10. Trouver un bénéficiaire par RIB
+GET http://localhost:8080/api/beneficiaires/rib/FR7630001007941234567890185
+
+### 11. Mettre à jour un bénéficiaire
+PUT http://localhost:8080/api/beneficiaires/1
+Content-Type: application/json
+
+{
+  "nom": "Dupont",
+  "prenom": "Jean-Pierre",
+  "rib": "FR7630001007941234567890185",
+  "type": "PHYSIQUE"
+}
+
+### 12. Mettre à jour un bénéficiaire inexistant
+PUT http://localhost:8080/api/beneficiaires/999
+Content-Type: application/json
+
+{
+  "nom": "Inexistant",
+  "prenom": "Test",
+  "rib": "FR7630001007941234567890999",
+  "type": "PHYSIQUE"
+}
+
+### 13. Supprimer un bénéficiaire
+DELETE http://localhost:8080/api/beneficiaires/2
+
+### 14. Supprimer un bénéficiaire inexistant
+DELETE http://localhost:8080/api/beneficiaires/999
