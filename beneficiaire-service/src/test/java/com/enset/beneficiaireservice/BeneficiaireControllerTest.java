@@ -28,7 +28,7 @@ public class BeneficiaireControllerTest {
     public void testCreerBeneficiairePhysique() {
         String beneficiaireBody = """
             {
-                "nom": "Dupont",
+                "nom": "Sara",
                 "prenom": "Jean",
                 "rib": "FR7630001007941234567890185",
                 "type": "PHYSIQUE"
