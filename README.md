@@ -1,6 +1,6 @@
 # Évaluation Architectures Micro-services
 
-## 📋 Description du Projet
+##  Description du Projet
 
 Proof of Concept (POC) d'une application bancaire web et mobile basée sur une architecture micro-services permettant la gestion des virements bancaires et des bénéficiaires, avec un assistant intelligent basé sur l'IA générative.
 
@@ -8,7 +8,7 @@ Ce projet démontre la mise en œuvre d'une architecture distribuée moderne uti
 
 ---
 
-## 🎯 Problématique et Objectifs
+##  Problématique et Objectifs
 
 ### Problématique
 Les banques modernes nécessitent des systèmes distribués, scalables et résilients pour gérer les opérations bancaires en temps réel tout en offrant une expérience utilisateur optimale sur différentes plateformes (web, mobile).
@@ -23,7 +23,7 @@ Les banques modernes nécessitent des systèmes distribués, scalables et résil
 
 ---
 
-## 🏗️ Architecture du Projet
+##  Architecture du Projet
 
 ### Vue d'ensemble
 
@@ -61,7 +61,7 @@ Les banques modernes nécessitent des systèmes distribués, scalables et résil
 
 ### Micro-services Techniques
 
-#### 5. **Discovery-Service** (Port: 8761)
+#### 1. **Discovery-Service** (Port: 8761)
 Service de découverte et d'enregistrement des micro-services (Eureka Server ou Consul).
 
 **Responsabilités:**
@@ -79,10 +79,11 @@ Service de découverte et d'enregistrement des micro-services (Eureka Server ou 
 
 **Configuration application.properties :**
 ```properties
-spring.application.name=eureka-discovery-service
+spring.application.name=discovery-service
 server.port=8761
-eureka.client.register-with-eureka=false
+# D�sactivation de l'enregistrement du serveur lui-m�me dans Eureka
 eureka.client.fetch-registry=false
+eureka.client.register-with-eureka=false
 ```
 
 **Annotation dans la classe principale :**
@@ -99,7 +100,7 @@ public class EurekaDiscoveryServiceApplication {
 #### Eureka Dashboard
 ![img.png](img.png)
 
-#### 4. **Gateway-Service** (Port: 8888)
+#### 2. **Gateway-Service** (Port: 8888)
 Point d'entrée unique pour toutes les requêtes clients utilisant Spring Cloud Gateway.
 
 **Responsabilités:**
@@ -162,8 +163,32 @@ public class GatewayServiceApplication {
   }
 }
 ```
+#### 3. **Configuration du dépôt config-repo**
+Ce dépôt contient les fichiers de configuration centralisés utilisés par l’ensemble des microservices via Spring Cloud Config.
+![alt text](image.png)
 
-#### 6. **Config-Service** (Port: 8888)
+**application.properties — Configuration commune :**
+Ce fichier regroupe les paramètres partagés par tous les services :
+  - Activation de la console H2 (base de données en mémoire)
+  - Enregistrement auprès du serveur Eureka
+  - Activation de l’exposition des endpoints Actuator
+  - Configuration de la documentation Swagger/OpenAPI
+```properties
+spring.h2.console.enabled=true
+spring.cloud.discovery.enabled=true
+eureka.client.service-url.defaultZone=http://localhost:8761/eureka
+eureka.instance.prefer-ip-address=true
+management.endpoints.web.exposure.include=*
+springdoc.swagger-ui.path=/swagger-ui.html
+springdoc.api-docs.path=/api-docs
+```
+**beneficiaire-service-dev.properties — Configuration spécifique :**
+Ce fichier configure la base de données H2 dédiée au service Beneficiaire et le chemin d’accès aux endpoints REST.
+```properties
+spring.datasource.url=jdbc:h2:mem:beneficiaire-db
+spring.data.rest.base-path=/api
+```
+#### 4. **Config-Service** (Port: 9999)
 Gestion centralisée des configurations (Spring Cloud Config ou Consul Config).
 
 **Responsabilités:**
@@ -172,12 +197,129 @@ Gestion centralisée des configurations (Spring Cloud Config ou Consul Config).
 - Rafraîchissement dynamique des configurations
 - Versioning des configurations
 
+
+**Dépendance config Server :**
+```xml
+<dependencies>
+  <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-config-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+</dependencies>
+```
+**Configuration application.properties :**
+```properties
+spring.application.name=config-service
+server.port=9999
+# Dépôt Git local contenant les fichiers de configuration
+spring.cloud.config.server.git.uri=file:///C:/Users/hp/Documents/git/poc/config-repo
+
+```
+
+**Annotation dans la classe principale :**
+```java
+package com.enset.configservice;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.config.server.EnableConfigServer;
+
+@SpringBootApplication
+@EnableConfigServer
+public class ConfigServiceApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(ConfigServiceApplication.class, args);
+    }
+
+}
+```
 ---
+
 
 ### Micro-services Fonctionnels
 
 #### 1. **Bénéficiaire-Service** (Port: 8081)
 Gère l'ensemble des opérations CRUD relatives aux bénéficiaires de virements.
+**Dépendance Bénéficiaire-Service :**
+```xml
+<dependencies>
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-jpa</artifactId>
+  </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.8.13</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
+            <version>2.8.13</version>
+        </dependency>
+</dependencies>
+```
+**Configuration application.properties :**
+```properties
+spring.application.name=beneficiaire-service
+server.port=8081
+spring.cloud.config.enabled=true
+spring.config.import=optional:configserver:http://localhost:9999
+```
+
+**Annotation dans la classe principale :**
+```java
+package com.enset.beneficiaireservice;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+
+@SpringBootApplication
+@EnableDiscoveryClient
+public class BeneficiaireServiceApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(BeneficiaireServiceApplication.class, args);
+    }
+}
+```
 
 **Entité Bénéficiaire:**
 - `id`: Identifiant unique
@@ -185,17 +327,179 @@ Gère l'ensemble des opérations CRUD relatives aux bénéficiaires de virements
 - `prenom`: Prénom du bénéficiaire
 - `rib`: Relevé d'Identité Bancaire
 - `type`: Type de bénéficiaire (PHYSIQUE, MORALE)
+```java
+package com.enset.beneficiaireservice.entities;
 
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "beneficiaires")
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
+public class Beneficiaire {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String nom;
+    private String prenom;
+    @Column(unique = true)
+    private String rib;
+    @Enumerated(EnumType.STRING)
+    private TypeBeneficiaire type;
+
+    public enum TypeBeneficiaire {
+        PHYSIQUE, MORALE
+    }
+}
+```
+**Repository:**
+```java
+package com.enset.beneficiaireservice.repo;
+
+import com.enset.beneficiaireservice.entities.Beneficiaire;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface BeneficiaireRepository extends JpaRepository<Beneficiaire, Long> {
+
+}
+```
 **Endpoints principaux:**
-- `GET /api/beneficiaires` - Liste tous les bénéficiaires
-- `GET /api/beneficiaires/{id}` - Détails d'un bénéficiaire
-- `POST /api/beneficiaires` - Créer un bénéficiaire
-- `PUT /api/beneficiaires/{id}` - Modifier un bénéficiaire
-- `DELETE /api/beneficiaires/{id}` - Supprimer un bénéficiaire
+- `GET /beneficiaires` - Liste tous les bénéficiaires
+- `GET /beneficiaires/{id}` - Détails d'un bénéficiaire
+- `POST /beneficiaires` - Créer un bénéficiaire
+- `PUT /beneficiaires/{id}` - Modifier un bénéficiaire
+- `DELETE /beneficiaires/{id}` - Supprimer un bénéficiaire
+```java
+package com.enset.beneficiaireservice.controller;
+
+import com.enset.beneficiaireservice.entities.Beneficiaire;
+import com.enset.beneficiaireservice.repo.BeneficiaireRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/beneficiaires")
+@CrossOrigin(origins = "*")
+@Tag(name = "Gestion des Bénéficiaires", description = "API pour la gestion des bénéficiaires de virements")
+public class BeneficiaireController {
+    @Autowired
+    private BeneficiaireRepository beneficiaireRepository;
+
+    @GetMapping
+    @Operation(summary = "Lister tous les bénéficiaires")
+    public List<Beneficiaire> getAllBeneficiaires() {
+        return beneficiaireRepository.findAll();
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Trouver un bénéficiaire par ID")
+    public ResponseEntity<Beneficiaire> getBeneficiaireById(@PathVariable Long id) {
+        Optional<Beneficiaire> beneficiaire = beneficiaireRepository.findById(id);
+        return beneficiaire.map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    @Operation(summary = "Créer un nouveau bénéficiaire")
+    public Beneficiaire createBeneficiaire(@RequestBody Beneficiaire beneficiaire) {
+        return beneficiaireRepository.save(beneficiaire);
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Modifier un bénéficiaire")
+    public ResponseEntity<Beneficiaire> updateBeneficiaire(@PathVariable Long id,
+                                                           @RequestBody Beneficiaire beneficiaireDetails) {
+        Optional<Beneficiaire> optionalBeneficiaire = beneficiaireRepository.findById(id);
+        if (optionalBeneficiaire.isPresent()) {
+            Beneficiaire beneficiaire = optionalBeneficiaire.get();
+            beneficiaire.setNom(beneficiaireDetails.getNom());
+            beneficiaire.setPrenom(beneficiaireDetails.getPrenom());
+            beneficiaire.setRib(beneficiaireDetails.getRib());
+            beneficiaire.setType(beneficiaireDetails.getType());
+            return ResponseEntity.ok(beneficiaireRepository.save(beneficiaire));
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Supprimer un bénéficiaire")
+    public ResponseEntity<?> deleteBeneficiaire(@PathVariable Long id) {
+        if (beneficiaireRepository.existsById(id)) {
+            beneficiaireRepository.deleteById(id);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+}
+```
 
 #### 2. **Virement-Service** (Port: 8082)
 Gère les opérations de virements bancaires entre comptes.
 
+
+**Dépendance Virement-Service :**
+```xml
+<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-config</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-openfeign</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+	</dependencies>
+```
+**Configuration application.properties :**
+```properties
+spring.application.name=virement-service
+server.port=8082
+spring.config.import=optional:configserver:http://localhost:9999
+```
+
+**Annotation dans la classe principale :**
+```java
+@SpringBootApplication
+@EnableDiscoveryClient
+@EnableFeignClients
+public class VirementServiceApplication {
+	public static void main(String[] args) {
+		SpringApplication.run(VirementServiceApplication.class, args);
+	}
+}
+```
 **Entité Virement:**
 - `id`: Identifiant unique
 - `beneficiaireId`: Référence au bénéficiaire
@@ -204,13 +508,262 @@ Gère les opérations de virements bancaires entre comptes.
 - `description`: Description du virement
 - `dateVirement`: Date et heure du virement
 - `type`: Type de virement (NORMAL, INSTANTANE)
+```java
+package com.enset.virementservice.entities;
 
+import jakarta.persistence.*;
+import lombok.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "virements")
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
+public class Virement {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private Long beneficiaireId;
+    private String ribSource;
+    private BigDecimal montant;
+    private String description;
+    private LocalDateTime dateVirement;
+
+    @Enumerated(EnumType.STRING)
+    private TypeVirement type;
+    @Enumerated(EnumType.STRING)
+    private StatutVirement statut;
+
+    public enum TypeVirement {
+        NORMAL, INSTANTANE
+    }
+    public enum StatutVirement {
+        INITIE, VALIDE, EXECUTE, REJETE, ANNULE
+    }
+}
+```
+**Communication entre les servcice avec OpenFien :**
+```java
+package com.enset.virementservice.client;
+
+import com.enset.virementservice.dtos.BeneficiaireResponse;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+@FeignClient(
+        name = "beneficiaire-service",
+        path = "/beneficiaires"
+)
+public interface BeneficiaireClient {
+    @GetMapping("/{id}")
+    BeneficiaireResponse getBeneficiaireById(@PathVariable("id") Long id);
+}
+```
+**dtos:**
+BeneficiareResponse
+```java
+
+@Data @AllArgsConstructor @NoArgsConstructor
+public class BeneficiaireResponse {
+    private Long id;
+    private String nom;
+    private String prenom;
+    private String rib;
+    private String type;
+}
+```
+VirementRequenst
+```java
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder @Getter @Setter
+public class VirementRequest {
+    private Long beneficiaireId;
+    private String ribSource;
+    private BigDecimal montant;
+    private String description;
+    private Virement.TypeVirement type;
+}
+```
+VirementReponse
+```java
+@Data @AllArgsConstructor @NoArgsConstructor @Builder
+public class VirementResponse {
+    private Long id;
+    private Long beneficiaireId;
+    private String ribSource;
+    private BigDecimal montant;
+    private String description;
+    private LocalDateTime dateVirement;
+    private Virement.TypeVirement type;
+    private Virement.StatutVirement statut;
+    private String beneficiaireNom;
+    private String beneficiairePrenom;
+    private String beneficiaireRib;
+}
+```
+**service:**
+```java
+@Service
+@Transactional
+public class VirementService {
+
+    @Autowired
+    private VirementRepository virementRepository;
+
+    @Autowired
+    private BeneficiaireClient beneficiaireClient;
+
+    public VirementResponse createVirement(VirementRequest request) {
+        // Validation synchrone : Vérifier que le bénéficiaire existe
+        Boolean beneficiaireExists = beneficiaireClient.checkBeneficiaireExists(request.getBeneficiaireId());
+
+        if (Boolean.FALSE.equals(beneficiaireExists)) {
+            throw new IllegalArgumentException("Le bénéficiaire avec ID " + request.getBeneficiaireId() + " n'existe pas");
+        }
+
+        // Validation métier supplémentaire
+        validateVirement(request);
+
+        // Créer l'entité Virement
+        Virement virement = new Virement();
+        virement.setBeneficiaireId(request.getBeneficiaireId());
+        virement.setRibSource(request.getRibSource());
+        virement.setMontant(request.getMontant());
+        virement.setDescription(request.getDescription());
+        virement.setType(request.getType());
+        virement.setStatut(Virement.StatutVirement.VALIDE);
+
+        // Sauvegarder le virement
+        Virement savedVirement = virementRepository.save(virement);
+
+        return mapToResponse(savedVirement);
+    }
+
+    public VirementResponse getVirementWithDetails(Long virementId) {
+        Virement virement = virementRepository.findById(virementId)
+                .orElseThrow(() -> new IllegalArgumentException("Virement non trouvé avec ID: " + virementId));
+
+        VirementResponse response = mapToResponse(virement);
+
+        // Enrichir avec les détails du bénéficiaire
+        try {
+            BeneficiaireResponse beneficiaire =
+                    beneficiaireClient.getBeneficiaireById(virement.getBeneficiaireId());
+
+            response.setBeneficiaireNom(beneficiaire.getNom());
+            response.setBeneficiairePrenom(beneficiaire.getPrenom());
+            response.setBeneficiaireRib(beneficiaire.getRib());
+        } catch (Exception e) {
+            // Log l'erreur mais ne pas bloquer la réponse
+            System.err.println("Erreur lors de la récupération des détails du bénéficiaire: " + e.getMessage());
+        }
+
+        return response;
+    }
+
+    public List<VirementResponse> getVirementsByBeneficiaire(Long beneficiaireId) {
+        List<Virement> virements = virementRepository.findByBeneficiaireId(beneficiaireId);
+        return virements.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    }
+
+    private VirementResponse mapToResponse(Virement virement) {
+        VirementResponse response = new VirementResponse();
+        response.setId(virement.getId());
+        response.setBeneficiaireId(virement.getBeneficiaireId());
+        response.setRibSource(virement.getRibSource());
+        response.setMontant(virement.getMontant());
+        response.setDescription(virement.getDescription());
+        response.setDateVirement(virement.getDateVirement());
+        response.setType(virement.getType());
+        response.setStatut(virement.getStatut());
+
+        return response;
+     }
+}
+```
 **Endpoints principaux:**
-- `GET /api/virements` - Liste tous les virements
-- `GET /api/virements/{id}` - Détails d'un virement
-- `POST /api/virements` - Créer un virement
-- `GET /api/virements/beneficiaire/{beneficiaireId}` - Virements par bénéficiaire
+- `GET /virements` - Liste tous les virements
+- `GET /virements/{id}` - Détails d'un virement
+- `POST /virements` - Créer un virement
+- `GET /virements/beneficiaire/{beneficiaireId}` - Virements par bénéficiaire
+```java
+@RestController
+@RequestMapping("/virements")
+@Tag(name = "Gestion des Virements", description = "API pour la gestion des virements bancaires")
+public class VirementController {
+    @Autowired
+    private VirementService virementService;
 
+    @PostMapping
+   @Operation(summary = "Créer un nouveau virement", description = "Crée un nouveau virement après validation du bénéficiaire")
+    public ResponseEntity<VirementResponse> createVirement(@RequestBody VirementRequest virementRequest) {
+        try {
+            VirementResponse createdVirement = virementService.createVirement(virementRequest);
+            return ResponseEntity.ok(createdVirement);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping
+    @Operation(summary = "Lister tous les virements")
+    public List<VirementResponse> getAllVirements() {
+        // Dans une vraie application, ajouter la pagination
+        return virementService.getVirementsByRibSource("ALL"); // Modifier selon les besoins
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Trouver un virement par ID")
+    public ResponseEntity<VirementResponse> getVirementById(@PathVariable Long id) {
+        try {
+            VirementResponse virement = virementService.getVirementWithDetails(id);
+            return ResponseEntity.ok(virement);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/beneficiaire/{beneficiaireId}")
+    @Operation(summary = "Lister les virements par bénéficiaire")
+    public List<VirementResponse> getVirementsByBeneficiaire(@PathVariable Long beneficiaireId) {
+        return virementService.getVirementsByBeneficiaire(beneficiaireId);
+    }
+}
+```
+### 2.1 Documentation
+- **Swagger / OpenAPI 3.0** - Documentation API REST
+- **SpringDoc OpenAPI** - Génération automatique
+**Dépendance :**
+```xml
+    <dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.8.13</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
+			<version>2.8.13</version>
+		</dependency>
+```
+**application.properties:**
+```properties
+springdoc.swagger-ui.path=/swagger-ui.html
+springdoc.api-docs.path=/api-docs
+```
+**Teste:**
+- http://localhost:8081/swagger-ui/index.html
+![img_3.png](img_3.png)
+- http://localhost:8082/swagger-ui/index.html
+![img_2.png](img_2.png)
+![img_4.png](img_4.png)
 #### 3. **Chat-Bot-Service** (Port: 8083)
 Assistant intelligent basé sur l'IA générative utilisant la technique RAG (Retrieval-Augmented Generation).
 

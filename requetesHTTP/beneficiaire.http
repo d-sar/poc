@@ -1,11 +1,11 @@
 ### 1. Créer un bénéficiaire physique
-POST http://localhost:8888/beneficiaire-service/beneficiaires
+POST http://localhost:8081/beneficiaires
 Content-Type: application/json
 
 {
-  "nom": "Dupont",
-  "prenom": "Jean",
-  "rib": "FR7630001007941234567890185",
+  "nom": "sara",
+  "prenom": "sara",
+  "rib": "FR76300010sdd941234567890185",
   "type": "PHYSIQUE"
 }
 
@@ -21,7 +21,7 @@ Content-Type: application/json
 }
 
 ### 3. Créer un autre bénéficiaire physique
-POST http://localhost:8080/api/beneficiaires
+POST http://localhost:8888/beneficiaire-service/beneficiaires
 Content-Type: application/json
 
 {
@@ -86,3 +86,4 @@ DELETE http://localhost:8080/api/beneficiaires/2
 
 ### 14. Supprimer un bénéficiaire inexistant
 DELETE http://localhost:8080/api/beneficiaires/999
+

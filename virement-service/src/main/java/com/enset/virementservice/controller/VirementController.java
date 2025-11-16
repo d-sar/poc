@@ -17,6 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/virements")
+@CrossOrigin(origins = "http://localhost:3000", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
 @Tag(name = "Gestion des Virements", description = "API pour la gestion des virements bancaires")
 public class VirementController {
 

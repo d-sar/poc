@@ -1,9 +1,9 @@
 ### 15. Créer un virement normal valide
-POST http://localhost:8888/virement-service/virements
+POST http://localhost:8082/virements
 Content-Type: application/json
 
 {
-  "beneficiaireId": 1,
+  "beneficiaireId": 3,
   "ribSource": "FR7610011000201234567890188",
   "montant": 1500.50,
   "description": "Remboursement frais",
@@ -35,7 +35,7 @@ Content-Type: application/json
 }
 
 ### 18. Créer un virement avec montant négatif
-POST http://localhost:8080/api/virements
+POST http://localhost:8082/virements
 Content-Type: application/json
 
 {

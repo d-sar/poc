@@ -15,6 +15,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/beneficiaires")
+@CrossOrigin(origins = "*")
 @Tag(name = "Gestion des Bénéficiaires", description = "API pour la gestion des bénéficiaires de virements")
 public class BeneficiaireController {
 
